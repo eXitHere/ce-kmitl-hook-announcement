@@ -1,4 +1,5 @@
 const axios = require('axios');
+const cron = require('node-cron');
 const _ = require('lodash');
 
 const sendMessage = require('./sendMessageViaWebhook');
@@ -12,8 +13,9 @@ async function fetchData() {
 
 		const { ANNOUNCE: announce } = res.data;
 
+		// filter only isNew === true
 		const newAnnounce = _.filter(announce, function (e, idx) {
-			return e.isNew || idx < 3;
+			return e.isNew;
 		});
 
 		newAnnounce.forEach(async (e) => {
@@ -38,4 +40,7 @@ async function fetchData() {
 	}
 }
 
-fetchData();
+cron.schedule('0 * * * *', async function () {
+	console.log('Running a job every hour');
+	await fetchData();
+});
