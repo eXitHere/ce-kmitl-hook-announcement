@@ -1,6 +1,7 @@
 const axios = require('axios');
 const cron = require('node-cron');
 const _ = require('lodash');
+const { readNote, writeNote } = require('./jsonUtils');
 
 const sendMessage = require('./sendMessageViaWebhook');
 
@@ -17,6 +18,22 @@ async function fetchData() {
 		const newAnnounce = _.filter(announce, function (e, idx) {
 			return e.isNew;
 		});
+
+		// read note
+		const note = readNote();
+
+		// remove by id
+		_.remove(newAnnounce, (announce) => {
+			return _.indexOf(note, announce.ANNOUNCE_ID) !== -1;
+		});
+
+		// get new id
+		const newId = newAnnounce.map((e) => e.ANNOUNCE_ID);
+
+		// save note
+		writeNote([...note, ...newId]);
+
+		// console.log(newAnnounce);
 
 		newAnnounce.forEach(async (e) => {
 			// get announcement details
@@ -39,6 +56,8 @@ async function fetchData() {
 		console.log(error);
 	}
 }
+
+// fetchData();
 
 cron.schedule('0 * * * *', async function () {
 	console.log('Running a job every hour');
